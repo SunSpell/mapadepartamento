@@ -48,6 +48,33 @@
         }).addTo(map);
       })
       .catch(error => console.error('Error al cargar el GeoJSON:', error));
+    
+        // Lista de departamentos y cabeceras
+    var departamentos = [
+      { nombre: "Ambato", cabecera: "La Puerta", coords: [-28.319, -65.791] },
+      { nombre: "Ancasti", cabecera: "Ancasti", coords: [-29.183, -65.383] },
+      { nombre: "Andalgalá", cabecera: "Andalgalá", coords: [-27.579, -66.316] },
+      { nombre: "Antofagasta de la Sierra", cabecera: "Antofagasta de la Sierra", coords: [-26.065, -67.396] },
+      { nombre: "Belén", cabecera: "Belén", coords: [-27.650, -66.916] },
+      { nombre: "Capayán", cabecera: "Chumbicha", coords: [-28.783, -65.900] },
+      { nombre: "Capital", cabecera: "San Fernando del Valle de Catamarca", coords: [-28.4696, -65.7795] },
+      { nombre: "El Alto", cabecera: "El Alto", coords: [-28.166, -65.033] },
+      { nombre: "Fray Mamerto Esquiú", cabecera: "San José", coords: [-28.375, -65.687] },
+      { nombre: "La Paz", cabecera: "Recreo", coords: [-29.267, -65.233] },
+      { nombre: "Paclín", cabecera: "La Merced", coords: [-28.220, -65.583] },
+      { nombre: "Pomán", cabecera: "Saujil", coords: [-28.383, -66.183] },
+      { nombre: "Santa María", cabecera: "Santa María", coords: [-26.700, -66.050] },
+      { nombre: "Santa Rosa", cabecera: "Bañado de Ovanta", coords: [-28.283, -64.933] },
+      { nombre: "Tinogasta", cabecera: "Tinogasta", coords: [-28.063, -67.566] },
+      { nombre: "Valle Viejo", cabecera: "San Isidro", coords: [-28.471, -65.702] },
+    ];
+
+    // Marcadores en el mapa
+    departamentos.forEach(function(dep) {
+      L.marker(dep.coords)
+        .addTo(map)
+        .bindPopup(`<strong>${dep.nombre}</strong><br>Cabecera: ${dep.cabecera}`);
+    });
   </script>
 </body>
 </html>
