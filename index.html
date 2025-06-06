@@ -1,80 +1,146 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mapa Interactivo de Catamarca</title>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interactivo de Catamarca</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Leaflet CSS y JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <style>
-    #map {
-      height: 90vh;
-    }
-  </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-search/dist/leaflet-search.min.css" />
+    <script src="https://unpkg.com/leaflet-search/dist/leaflet-search.min.js"></script>
+
+    <style>
+        #map {
+            height: 75vh;
+            width: 75%;
+        }
+
+        /* Estilo para el campo de búsqueda de Leaflet Search */
+        .leaflet-control-search .search-button {
+            background-image: url('https://cdn-icons-png.flaticon.com/512/2697/2697422.png') !important; /* Icono de lupa */
+            background-size: 20px 20px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .leaflet-control-search .search-button:hover {
+            background-image: url('https://cdn-icons-png.flaticon.com/512/2697/2697422.png') !important; /* Icono de lupa */
+            background-size: 20px 20px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Ajustes para el contenedor del mapa y el campo de búsqueda si quieres centrarlo */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: sans-serif;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-  <h2>Departamentos de Catamarca</h2>
-  <div id="map"></div>
+    <h2>Departamentos de Catamarca</h2>
+    <div id="map"></div>
 
-  <script>
-    // Crear el mapa centrado en Catamarca, Argentina
-    var map = L.map('map').setView([-28.4696, -65.7795], 7);
+    <script>
+        // Crear el mapa centrado en Catamarca, Argentina
+        var map = L.map('map').setView([-28.4696, -65.7795], 7);
 
-    // Agregar capa base (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Cargar y mostrar los límites departamentales desde un archivo GeoJSON
-    fetch('https://raw.githubusercontent.com/mgaitan/departamentos_argentina/master/departamentos-catamarca.json')
-      .then(response => response.json())
-      .then(data => {
-        L.geoJSON(data, {
-          style: function (feature) {
-            return {
-              color: '#3388ff',
-              weight: 2,
-              fillOpacity: 0.1
-            };
-          },
-          onEachFeature: function (feature, layer) {
-            if (feature.properties && feature.properties.nombre) {
-              layer.bindPopup(`<strong>${feature.properties.nombre}</strong>`);
-            }
-          }
+        // Agregar capa base (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
-      })
-      .catch(error => console.error('Error al cargar el GeoJSON:', error));
-    
-        // Lista de departamentos y cabeceras
-    var departamentos = [
-      { nombre: "Ambato", cabecera: "La Puerta", coords: [-28.166666666667, -65.783333333333] },
-      { nombre: "Ancasti", cabecera: "Ancasti", coords: [-28.812222222222, -65.5] },
-      { nombre: "Andalgalá", cabecera: "Andalgalá", coords: [-27.6, -66.316666666667] },
-      { nombre: "Antofagasta de la Sierra", cabecera: "Antofagasta de la Sierra", coords: [-26.059444444444, -67.406388888889] },
-      { nombre: "Belén", cabecera: "Belén", coords: [-27.65, -67.033333333333] },
-      { nombre: "Capayán", cabecera: "Chumbicha", coords: [ -28.86666667, -66.23333333] },
-      { nombre: "Capital", cabecera: "San Fernando del Valle de Catamarca", coords: [ -28.468611111111, -65.779166666667] },
-      { nombre: "El Alto", cabecera: "El Alto", coords: [-28.3, -65.366666666667] },
-      { nombre: "Fray Mamerto Esquiú", cabecera: "San José", coords: [ -28.366666666667, -65.7] },
-      { nombre: "La Paz", cabecera: "Recreo", coords: [-29.266666666667, -65.066666666667] },
-      { nombre: "Paclín", cabecera: "La Merced", coords: [-28.1543961, -65.6594655] },
-      { nombre: "Pomán", cabecera: "Saujil", coords: [-28.1738086, -66.2114866] },
-      { nombre: "Santa María", cabecera: "Santa María", coords: [-26.694341666667, -66.047983333333] },
-      { nombre: "Santa Rosa", cabecera: "Bañado de Ovanta", coords: [-28.1, -65.316666666667] },
-      { nombre: "Tinogasta", cabecera: "Tinogasta", coords: [-28.066666666667, -67.566666666667] },
-      { nombre: "Valle Viejo", cabecera: "San Isidro", coords: [-28.457833333333, -65.725] },
-    ];
 
-    // Marcadores en el mapa
-    departamentos.forEach(function(dep) {
-      L.marker(dep.coords)
-        .addTo(map)
-        .bindPopup(`<strong>${dep.nombre}</strong><br>Cabecera: ${dep.cabecera}`);
-    });
-  </script>
+        // Variable para almacenar la capa de GeoJSON de departamentos
+        var geoJsonLayer;
+
+        // Cargar y mostrar los límites departamentales desde un archivo GeoJSON
+        fetch('https://raw.githubusercontent.com/mgaitan/departamentos_argentina/master/departamentos-catamarca.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("GeoJSON data loaded successfully:", data); // Mensaje de depuración
+
+                geoJsonLayer = L.geoJSON(data, {
+                    style: function (feature) {
+                        return {
+                            color: '#3388ff',
+                            weight: 2,
+                            fillOpacity: 0.1
+                        };
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.nombre) {
+                            const departmentName = feature.properties.nombre;
+                            // Busca la cabecera correspondiente usando el mapa creado
+                            let cabeceraName = departamentosCabecerasMap[departmentName.toLowerCase()] || '';
+
+                            // *** NUEVO: Combina el nombre del departamento y la cabecera para la búsqueda ***
+                            feature.properties.searchable_data = departmentName; // Empieza con el nombre del departamento
+                            if (cabeceraName) {
+                                feature.properties.searchable_data += ' ' + cabeceraName; // Agrega la cabecera si existe
+                            }
+
+                            layer.bindPopup(`<strong>${departmentName}</strong><br>Cabecera: ${cabeceraName}`);
+                            // console.log("Added feature:", departmentName, "Searchable Data:", feature.properties.searchable_data); // Descomentar para depuración
+                        }
+                    }
+                }).addTo(map);
+
+                console.log("GeoJSON layer added to map:", geoJsonLayer);
+
+                // --- Inicializar el control de búsqueda ---
+                var searchControl = new L.Control.Search({
+                    layer: geoJsonLayer,          // La capa donde buscar (tus departamentos GeoJSON)
+                    propertyName: 'departamento', // *** CAMBIADO: La nueva propiedad combinada ***
+                    marker: false,                // No crear un marcador nuevo, sino enfocar en el polígono
+                    textPlaceholder: 'Buscar departamento...', // Actualizar texto de placeholder
+                    initial: false,               // No mostrar todos los resultados al inicio
+                    zoom: 10                      // Zoom al que se acercará al encontrar el departamento
+                });
+                map.addControl(searchControl); // Añadir el control al mapa
+                console.log("Leaflet Search control initialized and added to map.");
+
+            })
+            .catch(error => {
+                console.error('Error al cargar o procesar el GeoJSON o inicializar la búsqueda:', error); // Mensaje de error
+            });
+
+        // Lista de departamentos y cabeceras (se mantiene para los marcadores, no para la búsqueda)
+        var departamentos = [
+            { nombre: "Ambato", cabecera: "La Puerta", coords: [-28.166666666667, -65.783333333333] },
+            { nombre: "Ancasti", cabecera: "Ancasti", coords: [-28.812222222222, -65.5] },
+            { nombre: "Andalgalá", cabecera: "Andalgalá", coords: [-27.6, -66.316666666667] },
+            { nombre: "Antofagasta de la Sierra", cabecera: "Antofagasta de la Sierra", coords: [-26.059444444444, -67.406388888889] },
+            { nombre: "Belén", cabecera: "Belén", coords: [-27.65, -67.033333333333] },
+            { nombre: "Capayán", cabecera: "Chumbicha", coords: [ -28.86666667, -66.23333333] },
+            { nombre: "Capital", cabecera: "San Fernando del Valle de Catamarca", coords: [ -28.468611111111, -65.779166666667] },
+            { nombre: "El Alto", cabecera: "El Alto", coords: [-28.3, -65.366666666667] },
+            { nombre: "Fray Mamerto Esquiú", cabecera: "San José", coords: [ -28.366666666667, -65.7] },
+            { nombre: "La Paz", cabecera: "Recreo", coords: [-29.266666666667, -65.066666666667] },
+            { nombre: "Paclín", cabecera: "La Merced", coords: [-28.1543961, -65.6594655] },
+            { nombre: "Pomán", cabecera: "Saujil", coords: [-28.1738086, -66.2114866] },
+            { nombre: "Santa María", cabecera: "Santa María", coords: [-26.694341666667, -66.047983333333] },
+            { nombre: "Santa Rosa", cabecera: "Bañado de Ovanta", coords: [-28.1, -65.316666666667] },
+            { nombre: "Tinogasta", cabecera: "Tinogasta", coords: [-28.066666666667, -67.566666666667] },
+            { nombre: "Valle Viejo", cabecera: "San Isidro", coords: [-28.457833333333, -65.725] },
+        ];
+
+        // Marcadores en el mapa (esta parte sigue igual)
+        departamentos.forEach(function(dep) {
+            L.marker(dep.coords)
+                .addTo(map)
+                .bindPopup(`<strong>${dep.nombre}</strong><br>Cabecera: ${dep.cabecera}`);
+        });
+    </script>
 </body>
 </html>
