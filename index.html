@@ -13,19 +13,13 @@
 
     <style>
         #map {
-            height: 75vh;
+            height: 65vh;
             width: 75%;
         }
 
         /* Estilo para el campo de búsqueda de Leaflet Search */
-        .leaflet-control-search .search-button {
-            background-image: url('https://cdn-icons-png.flaticon.com/512/2697/2697422.png') !important; /* Icono de lupa */
-            background-size: 20px 20px;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        .leaflet-control-search .search-button:hover {
-            background-image: url('https://cdn-icons-png.flaticon.com/512/2697/2697422.png') !important; /* Icono de lupa */
+        .leaflet-control-search .search-button .search-button:hover {
+            background-image: url('https://cdn-icons-png.flaticon.com/512/324/324654.png') !important; /* Icono de lupa */
             background-size: 20px 20px;
             background-repeat: no-repeat;
             background-position: center;
@@ -56,66 +50,7 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Variable para almacenar la capa de GeoJSON de departamentos
-        var geoJsonLayer;
-
-        // Cargar y mostrar los límites departamentales desde un archivo GeoJSON
-        fetch('https://raw.githubusercontent.com/mgaitan/departamentos_argentina/master/departamentos-catamarca.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log("GeoJSON data loaded successfully:", data); // Mensaje de depuración
-
-                geoJsonLayer = L.geoJSON(data, {
-                    style: function (feature) {
-                        return {
-                            color: '#3388ff',
-                            weight: 2,
-                            fillOpacity: 0.1
-                        };
-                    },
-                    onEachFeature: function (feature, layer) {
-                        if (feature.properties && feature.properties.nombre) {
-                            const departmentName = feature.properties.nombre;
-                            // Busca la cabecera correspondiente usando el mapa creado
-                            let cabeceraName = departamentosCabecerasMap[departmentName.toLowerCase()] || '';
-
-                            // *** NUEVO: Combina el nombre del departamento y la cabecera para la búsqueda ***
-                            feature.properties.searchable_data = departmentName; // Empieza con el nombre del departamento
-                            if (cabeceraName) {
-                                feature.properties.searchable_data += ' ' + cabeceraName; // Agrega la cabecera si existe
-                            }
-
-                            layer.bindPopup(`<strong>${departmentName}</strong><br>Cabecera: ${cabeceraName}`);
-                            // console.log("Added feature:", departmentName, "Searchable Data:", feature.properties.searchable_data); // Descomentar para depuración
-                        }
-                    }
-                }).addTo(map);
-
-                console.log("GeoJSON layer added to map:", geoJsonLayer);
-
-                // --- Inicializar el control de búsqueda ---
-                var searchControl = new L.Control.Search({
-                    layer: geoJsonLayer,          // La capa donde buscar (tus departamentos GeoJSON)
-                    propertyName: 'departamento', // *** CAMBIADO: La nueva propiedad combinada ***
-                    marker: false,                // No crear un marcador nuevo, sino enfocar en el polígono
-                    textPlaceholder: 'Buscar departamento...', // Actualizar texto de placeholder
-                    initial: false,               // No mostrar todos los resultados al inicio
-                    zoom: 10                      // Zoom al que se acercará al encontrar el departamento
-                });
-                map.addControl(searchControl); // Añadir el control al mapa
-                console.log("Leaflet Search control initialized and added to map.");
-
-            })
-            .catch(error => {
-                console.error('Error al cargar o procesar el GeoJSON o inicializar la búsqueda:', error); // Mensaje de error
-            });
-
-        // Lista de departamentos y cabeceras (se mantiene para los marcadores, no para la búsqueda)
+        // Lista de departamentos y cabeceras (datos locales para enriquecer el GeoJSON)
         var departamentos = [
             { nombre: "Ambato", cabecera: "La Puerta", coords: [-28.166666666667, -65.783333333333] },
             { nombre: "Ancasti", cabecera: "Ancasti", coords: [-28.812222222222, -65.5] },
@@ -135,7 +70,79 @@
             { nombre: "Valle Viejo", cabecera: "San Isidro", coords: [-28.457833333333, -65.725] },
         ];
 
-        // Marcadores en el mapa (esta parte sigue igual)
+        // Crear un mapa de cabeceras para una búsqueda rápida (usando la lista 'departamentos')
+        var departamentosCabecerasMap = {};
+        departamentos.forEach(dep => {
+            // Aseguramos que la clave del mapa esté en MAYÚSCULAS para coincidir con el GeoJSON
+            departamentosCabecerasMap[dep.nombre.toUpperCase()] = dep.cabecera;
+        });
+
+        // Variable para almacenar la capa de GeoJSON de departamentos
+        var geoJsonLayer;
+
+        // Cargar y mostrar los límites departamentales desde un archivo GeoJSON (la API)
+        fetch('https://raw.githubusercontent.com/mgaitan/departamentos_argentina/master/departamentos-catamarca.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("GeoJSON data loaded successfully from API:", data);
+
+                geoJsonLayer = L.geoJSON(data, {
+                    style: function (feature) {
+                        return {
+                            color: '#3388ff',
+                            weight: 2,
+                            fillOpacity: 0.1
+                        };
+                    },
+                    onEachFeature: function (feature, layer) {
+                        // AHORA: Extrae el nombre del departamento de la propiedad 'departamento' del GeoJSON del API
+                        if (feature.properties && feature.properties.departamento) {
+                            const departmentNameFromAPI = feature.properties.departamento; // <-- USAMOS 'departamento'
+                            const departmentNameLower = departmentNameFromAPI.toLowerCase();
+
+                            // Busca la cabecera en nuestro mapa local (usando el nombre en MAYÚSCULAS para coincidir)
+                            let cabeceraName = departamentosCabecerasMap[departmentNameFromAPI.toUpperCase()] || '';
+
+                            // Crea la propiedad 'searchable_data' en las propiedades del GeoJSON del API
+                            // Combinamos el nombre del departamento (original del API) y la cabecera
+                            feature.properties.searchable_data = departmentNameFromAPI;
+                            if (cabeceraName) {
+                                feature.properties.searchable_data += ' ' + cabeceraName;
+                            }
+
+                            layer.bindPopup(`<strong>${departmentNameFromAPI}</strong><br>Cabecera: ${cabeceraName}`);
+                             console.log(`Added feature from API: ${departmentNameFromAPI}, Searchable Data: ${feature.properties.searchable_data}`); // Para depuración
+                        } else {
+                            console.warn("Feature in GeoJSON is missing 'departamento' property:", feature);
+                        }
+                    }
+                }).addTo(map);
+
+                console.log("GeoJSON layer (with enriched API data) added to map:", geoJsonLayer);
+
+                // --- Inicializar el control de búsqueda ---
+                var searchControl = new L.Control.Search({
+                    layer: geoJsonLayer,          // La capa de búsqueda son los datos del API
+                    propertyName: 'searchable_data', // Busca en la propiedad que creamos en los datos del API
+                    marker: false,
+                    textPlaceholder: 'Buscar departamento o cabecera...',
+                    initial: false,
+                    zoom: 10
+                });
+                map.addControl(searchControl);
+                console.log("Leaflet Search control initialized and added to map.");
+
+            })
+            .catch(error => {
+                console.error('Error al cargar o procesar el GeoJSON o inicializar la búsqueda:', error);
+            });
+
+        // Marcadores en el mapa (esta parte usa la lista 'departamentos' localmente)
         departamentos.forEach(function(dep) {
             L.marker(dep.coords)
                 .addTo(map)
